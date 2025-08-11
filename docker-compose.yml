@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  # Nome do serviço do banco de dados
+  postgres-db:
+    image: postgres:13 # Usamos uma imagem oficial do PostgreSQL
+    container_name: policia_api_db
+    restart: always
+    environment:
+      # Define as variáveis de ambiente para o container do Postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 83782813 # Pode ser uma senha simples para o ambiente de teste
+      POSTGRES_DB: policia_api
+    ports:
+      # Mapeia a porta do container (5432) para uma porta na sua máquina (5433)
+      # Usamos 5433 para não dar conflito com o Postgres que você já tem instalado
+      - "5433:5432"
+    volumes:
+      # Garante que os dados do banco persistam mesmo se o container for reiniciado
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

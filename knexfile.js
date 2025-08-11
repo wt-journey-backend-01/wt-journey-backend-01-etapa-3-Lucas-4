@@ -1,11 +1,10 @@
-// Remova o aninhamento "development: { ... }" e exporte o objeto diretamente.
 module.exports = {
     client: "pg",
     connection: {
-        host: "127.0.0.1",
-        port: 5432,
+        host: "postgres-db", // <-- MUDANÇA CRÍTICA: Nome do serviço no docker-compose
+        port: 5432, // Dentro da rede Docker, a porta é a padrão 5432
         user: "postgres",
-        password: "83782813", // Troque pela sua senha
+        password: "sua_senha_docker", // A mesma senha definida no docker-compose
         database: "policia_api",
     },
     migrations: {
