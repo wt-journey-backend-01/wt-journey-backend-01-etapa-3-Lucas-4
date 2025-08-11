@@ -5,14 +5,14 @@ module.exports = {
             host: "127.0.0.1",
             port: 5432,
             user: "postgres",
-            password: "83782813", // <<< TROQUE PELA SUA SENHA
+            password: "83782813",
             database: "policia_api",
         },
         migrations: {
-            directory: "./database/migrations",
+            directory: "./db/migrations",
         },
         seeds: {
-            directory: "./database/seeds",
+            directory: "./db/seeds",
         },
         useNullAsDefault: true,
     },
