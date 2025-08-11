@@ -1,31 +1,17 @@
-const db = require("../db/db.js");
-const { v4: uuidv4 } = require("uuid");
+const db = require("../db/db"); // Importa a conexão do Knex
 
-function findAll(filter = {}) {
-    const query = db("agentes");
-
-    if (filter.cargo) {
-        query.where("cargo", "ilike", `%${filter.cargo}%`);
-    }
-
-    if (filter.sort) {
-        const direction = filter.sort.startsWith("-") ? "desc" : "asc";
-        const column = filter.sort.replace("-", "");
-        if (["nome", "dataDeIncorporacao", "cargo"].includes(column)) {
-            query.orderBy(column, direction);
-        }
-    }
-
-    return query;
+// Knex retorna Promises, então todas as funções serão assíncronas
+function findAll() {
+    return db("agentes"); // SELECT * FROM agentes
 }
 
 function findById(id) {
-    return db("agentes").where({ id }).first();
+    return db("agentes").where({ id }).first(); // SELECT * FROM agentes WHERE id = ? LIMIT 1
 }
 
 function create(agente) {
-    const newAgente = { id: uuidv4(), ...agente };
-    return db("agentes").insert(newAgente).returning("*");
+    // INSERT INTO agentes(...) VALUES(...) RETURNING *
+    return db("agentes").insert(agente).returning("*");
 }
 
 function update(id, data) {
@@ -33,7 +19,13 @@ function update(id, data) {
 }
 
 function remove(id) {
-    return db("agentes").where({ id }).del();
+    return db("agentes").where({ id }).del(); // DELETE FROM agentes WHERE id = ?
 }
 
-module.exports = { findAll, findById, create, update, remove };
+module.exports = {
+    findAll,
+    findById,
+    create,
+    update,
+    remove,
+};

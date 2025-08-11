@@ -1,38 +1,26 @@
-const db = require("../db/db.js");
-const { v4: uuidv4 } = require("uuid");
+const db = require("../db/db");
 
-function findAll(filter = {}) {
-    const query = db("casos");
-
-    if (filter.status) {
-        query.where({ status: filter.status });
-    }
-
-    if (filter.agente_id) {
-        query.where({ agente_id: filter.agente_id });
-    }
-
-    if (filter.q) {
-        const searchTerm = `%${filter.q}%`;
-        query.where(function () {
-            this.where("titulo", "ilike", searchTerm).orWhere(
-                "descricao",
-                "ilike",
-                searchTerm
-            );
-        });
-    }
-
-    return query;
+function findAll() {
+    return db("casos");
 }
 
 function findById(id) {
     return db("casos").where({ id }).first();
 }
 
+// Funções para os filtros bônus
+function findBy(filter) {
+    return db("casos").where(filter);
+}
+
+function search(query) {
+    return db("casos")
+        .where("titulo", "ilike", `%${query}%`) // ilike é case-insensitive (específico do Postgres)
+        .orWhere("descricao", "ilike", `%${query}%`);
+}
+
 function create(caso) {
-    const newCaso = { id: uuidv4(), ...caso };
-    return db("casos").insert(newCaso).returning("*");
+    return db("casos").insert(caso).returning("*");
 }
 
 function update(id, data) {
@@ -43,4 +31,12 @@ function remove(id) {
     return db("casos").where({ id }).del();
 }
 
-module.exports = { findAll, findById, create, update, remove };
+module.exports = {
+    findAll,
+    findById,
+    findBy,
+    search,
+    create,
+    update,
+    remove,
+};
