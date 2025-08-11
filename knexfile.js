@@ -1,25 +1,53 @@
-// Update with your config settings.
+// Carrega as variáveis de ambiente do arquivo .env para process.env
+require("dotenv").config();
 
 /**
  * @type { Object.<string, import("knex").Knex.Config> }
  */
 module.exports = {
+    /**
+     * Configuração para o ambiente de desenvolvimento LOCAL.
+     * Usado quando você roda `npm start` ou `npx knex` na sua máquina.
+     */
     development: {
-        client: "pg", // Indica que estamos usando PostgreSQL
+        client: "pg",
         connection: {
-            host: "127.0.0.1", // Ou 'localhost'
-            port: 5432, // Porta padrão do Postgres
-            user: "postgres", // Usuário padrão
-            password: "docker", // Senha que definimos no Docker
-            database: "policia_api", // O banco de dados que criamos
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            user: process.env.POSTGRES_USER,
+            password: process.env.POSTGRES_PASSWORD,
+            database: process.env.POSTGRES_DB,
         },
         migrations: {
             tableName: "knex_migrations",
-            directory: `${__dirname}/db/migrations`, // Pasta para as migrations
+            // Corrigindo o caminho para apontar para a pasta 'database'
+            directory: `${__dirname}/db/migrations`,
         },
         seeds: {
-            directory: `${__dirname}/db/seeds`, // Pasta para os seeds
+            directory: `${__dirname}/db/seeds`,
         },
     },
-    // Você pode adicionar configurações para 'staging' e 'production' aqui
+
+    /**
+     * Configuração para o ambiente de Integração Contínua (CI).
+     * Usado por sistemas de automação como GitHub Actions.
+     * A principal diferença é o 'host', que se conecta pelo nome do serviço Docker.
+     */
+    ci: {
+        client: "pg",
+        connection: {
+            host: "db", // Nome do serviço do banco de dados no docker-compose.yml do CI
+            port: 5432,
+            user: process.env.POSTGRES_USER,
+            password: process.env.POSTGRES_PASSWORD,
+            database: process.env.POSTGRES_DB,
+        },
+        migrations: {
+            tableName: "knex_migrations",
+            directory: `${__dirname}/db/migrations`,
+        },
+        seeds: {
+            directory: `${__dirname}/db/seeds`,
+        },
+    },
 };
