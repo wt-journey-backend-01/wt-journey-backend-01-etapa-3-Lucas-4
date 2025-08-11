@@ -31,6 +31,7 @@ const swaggerDocs = swaggerJsdoc(swaggerOptions);
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Rotas da aplicação
+
 app.use(agentesRouter);
 app.use(casosRouter);
 app.use(errorHandler);
