@@ -1,46 +1,88 @@
-const agentesRepository = require("../repositories/agentesRepository");
+const agentesRepository = require('../repositories/agentesRepository');
+const casosRepository = require('../repositories/casosRepository');
+const { AppError } = require('../utils/errorHandler');
 
-// A função agora é 'async'
 async function getAllAgentes(req, res) {
-    // Usamos 'await' para esperar a resposta do banco
-    const agentes = await agentesRepository.findAll();
+    const cargo = req.query.cargo;
+    const sort = req.query.sort;
+
+    const filter = {};
+    if (cargo) {
+        filter.cargo = cargo;
+    }
+
+    const orderByMapping = {
+        dataDeIncorporacao: ['dataDeIncorporacao', 'asc'],
+        '-dataDeIncorporacao': ['dataDeIncorporacao', 'desc'],
+    };
+    let orderBy = orderByMapping[sort];
+
+    const agentes = await agentesRepository.findAll(filter, orderBy);
     res.json(agentes);
 }
 
 async function getAgenteById(req, res) {
-    const agente = await agentesRepository.findById(req.params.id);
+    const id = req.params.id;
+    const agente = await agentesRepository.findById(id);
     if (!agente) {
-        return res.status(404).json({ message: "Agente não encontrado" });
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
     }
     res.json(agente);
 }
 
 async function createAgente(req, res) {
-    // O retorno de 'create' é um array com o objeto criado
-    const [newAgente] = await agentesRepository.create(req.body);
-    res.status(201).json(newAgente);
+    const novoAgente = await agentesRepository.create(req.body);
+    res.status(201).json(novoAgente);
 }
 
 async function updateAgente(req, res) {
-    const [updatedAgente] = await agentesRepository.update(
-        req.params.id,
-        req.body
-    );
-    if (!updatedAgente) {
-        return res.status(404).json({ message: "Agente não encontrado" });
+    const id = req.params.id;
+
+    const agente = await agentesRepository.findById(id);
+    if (!agente) {
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
     }
-    res.json(updatedAgente);
+
+    const updatedAgente = await agentesRepository.update(id, req.body);
+    res.status(200).json(updatedAgente);
 }
 
-// ... e assim por diante para patch e delete
+async function updatePartialAgente(req, res) {
+    const id = req.params.id;
+
+    const agente = await agentesRepository.findById(id);
+    if (!agente) {
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
+    }
+
+    const updatedAgente = await agentesRepository.updatePartial(id, req.body);
+    res.status(200).json(updatedAgente);
+}
 
 async function deleteAgente(req, res) {
-    // .del() retorna o número de linhas deletadas
-    const rowsDeleted = await agentesRepository.remove(req.params.id);
-    if (rowsDeleted === 0) {
-        return res.status(404).json({ message: "Agente não encontrado" });
+    const id = req.params.id;
+
+    const agente = await agentesRepository.findById(id);
+    if (!agente) {
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
     }
+
+    const result = await agentesRepository.remove(id);
+    if (!result) {
+        throw new AppError(500, 'Erro ao remover o agente');
+    }
+
     res.status(204).send();
+}
+
+async function getCasosByAgenteId(req, res) {
+    const agenteId = req.params.id;
+    const agente = await agentesRepository.findById(agenteId);
+    if (!agente) {
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
+    }
+    const casos = await casosRepository.findAll({ agente_id: agenteId });
+    res.json(casos);
 }
 
 module.exports = {
@@ -48,6 +90,7 @@ module.exports = {
     getAgenteById,
     createAgente,
     updateAgente,
-    patchAgente: updateAgente, // PATCH pode reutilizar a lógica do PUT
+    updatePartialAgente,
     deleteAgente,
+    getCasosByAgenteId,
 };

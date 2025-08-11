@@ -1,23 +1,25 @@
-const { v4: uuidv4 } = require("uuid");
-
-/** @param {import("knex").Knex} knex */
+/**
+ * @param { import("knex").Knex } knex
+ * @returns { Promise<void> }
+ */
 exports.seed = async function (knex) {
-    // Deleta dados existentes para evitar duplicatas
-    await knex("agentes").del();
-
-    // Insere os agentes
-    await knex("agentes").insert([
+    // Deletes ALL existing entries
+    await knex('agentes').del();
+    await knex('agentes').insert([
         {
-            id: "401bccf5-cf9e-489d-8412-446cd169a0f1",
-            nome: "Rommel Carneiro",
-            dataDeIncorporacao: "1992-10-04",
-            cargo: "delegado",
+            nome: 'Larissa Moura',
+            dataDeIncorporacao: '2005-03-22',
+            cargo: 'delegado',
         },
         {
-            id: "a2b7e6c9-1d3f-4a8e-9b5c-8f6d7e9a1b3c",
-            nome: "Ana Pereira",
-            dataDeIncorporacao: "2015-03-12",
-            cargo: "inspetor",
+            nome: 'Carlos Meireles',
+            dataDeIncorporacao: '2000-01-05',
+            cargo: 'inspetor',
+        },
+        {
+            nome: 'Bruno Tavares',
+            dataDeIncorporacao: '2023-01-15',
+            cargo: 'inspetor',
         },
     ]);
 };

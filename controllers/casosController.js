@@ -1,163 +1,143 @@
-const casosRepository = require("../repositories/casosRepository");
-const agentesRepository = require("../repositories/agentesRepository"); // Necessário para validações e bônus
+const casosRepository = require('../repositories/casosRepository');
+const agentesRepository = require('../repositories/agentesRepository');
+const { AppError } = require('../utils/errorHandler');
 
-// GET /casos (com bônus de filtro e busca)
 async function getAllCasos(req, res) {
-    try {
-        // Bônus: Busca por termo (full-text search)
-        if (req.query.q) {
-            const query = req.query.q;
-            const casos = await casosRepository.search(query);
-            return res.json(casos);
-        }
+    const agenteId = req.query.agente_id;
+    const status = req.query.status;
 
-        // Bônus: Filtros (agente_id, status)
-        const filters = {};
-        if (req.query.agente_id) {
-            filters.agente_id = req.query.agente_id;
-        }
-        if (req.query.status) {
-            filters.status = req.query.status;
-        }
-
-        let casos;
-        // Se houver filtros, usa a função findBy, senão, busca todos
-        if (Object.keys(filters).length > 0) {
-            casos = await casosRepository.findBy(filters);
-        } else {
-            casos = await casosRepository.findAll();
-        }
-
-        res.json(casos);
-    } catch (error) {
-        console.error("Erro ao buscar casos:", error);
-        res.status(500).json({ message: "Erro interno do servidor" });
+    const filter = {};
+    if (agenteId) {
+        filter.agente_id = agenteId;
     }
+
+    if (status) {
+        filter.status = status;
+    }
+
+    const casos = await casosRepository.findAll(filter);
+    res.json(casos);
 }
 
-// GET /casos/:id
-async function getCasoById(req, res) {
-    try {
-        const caso = await casosRepository.findById(req.params.id);
-        if (!caso) {
-            return res.status(404).json({ message: "Caso não encontrado" });
-        }
-        res.json(caso);
-    } catch (error) {
-        res.status(500).json({ message: "Erro interno do servidor" });
+async function getCasosById(req, res) {
+    const id = Number(req.params.id);
+    if (!id || !Number.isInteger(id)) {
+        throw new AppError(404, 'Id inválido');
     }
+    const caso = await casosRepository.findById(id);
+    if (!caso) {
+        throw new AppError(404, 'Nenhum caso encontrado para o id especificado');
+    }
+    res.json(caso);
 }
 
-// POST /casos
 async function createCaso(req, res) {
-    try {
-        const { titulo, descricao, status, agente_id } = req.body;
-
-        // Validações
-        if (!titulo || !descricao || !status || !agente_id) {
-            return res
-                .status(400)
-                .json({
-                    message:
-                        "Dados inválidos. Campos obrigatórios: titulo, descricao, status, agente_id.",
-                });
-        }
-        if (status !== "aberto" && status !== "solucionado") {
-            return res
-                .status(400)
-                .json({
-                    message:
-                        "O campo 'status' pode ser somente 'aberto' ou 'solucionado'.",
-                });
-        }
-        // Verifica se o agente existe no banco
-        const agenteExiste = await agentesRepository.findById(agente_id);
-        if (!agenteExiste) {
-            return res
-                .status(400)
-                .json({
-                    message:
-                        "O 'agente_id' fornecido não corresponde a um agente existente.",
-                });
-        }
-
-        // Knex retorna um array com o(s) objeto(s) criado(s)
-        const [newCaso] = await casosRepository.create({
-            titulo,
-            descricao,
-            status,
-            agente_id,
-        });
-        res.status(201).json(newCaso);
-    } catch (error) {
-        res.status(500).json({ message: "Erro interno do servidor" });
-    }
-}
-
-// PUT /casos/:id
-async function updateCaso(req, res) {
-    try {
-        const [updatedCaso] = await casosRepository.update(
-            req.params.id,
-            req.body
-        );
-        if (!updatedCaso) {
-            return res.status(404).json({ message: "Caso não encontrado" });
-        }
-        res.json(updatedCaso);
-    } catch (error) {
-        res.status(500).json({ message: "Erro interno do servidor" });
-    }
-}
-
-// PATCH /casos/:id
-// Reutiliza a mesma lógica do PUT, pois nosso repositório já faz a atualização parcial.
-const patchCaso = updateCaso;
-
-// DELETE /casos/:id
-async function deleteCaso(req, res) {
-    try {
-        // .del() ou remove() retorna o número de linhas deletadas
-        const rowsDeleted = await casosRepository.remove(req.params.id);
-        if (rowsDeleted === 0) {
-            return res.status(404).json({ message: "Caso não encontrado" });
-        }
-        res.status(204).send(); // 204 No Content
-    } catch (error) {
-        res.status(500).json({ message: "Erro interno do servidor" });
-    }
-}
-
-// Bônus: GET /casos/:caso_id/agente
-async function getAgenteByCasoId(req, res) {
-    try {
-        const caso = await casosRepository.findById(req.params.caso_id);
-        if (!caso) {
-            return res.status(404).json({ message: "Caso não encontrado" });
-        }
-
-        const agente = await agentesRepository.findById(caso.agente_id);
+    const agenteId = req.body.agente_id;
+    if (agenteId) {
+        const agente = await agentesRepository.findById(agenteId);
         if (!agente) {
-            // Isso indica uma inconsistência de dados, mas 404 é apropriado
-            return res
-                .status(404)
-                .json({
-                    message: "Agente responsável pelo caso não foi encontrado",
-                });
+            throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
         }
-
-        res.json(agente);
-    } catch (error) {
-        res.status(500).json({ message: "Erro interno do servidor" });
+    } else {
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
     }
+    const novoCaso = await casosRepository.create(req.body);
+    res.status(201).json(novoCaso);
+}
+
+async function updateCaso(req, res) {
+    const id = req.params.id;
+
+    const agenteId = req.body.agente_id;
+    if (agenteId) {
+        const agente = await agentesRepository.findById(agenteId);
+        if (!agente) {
+            throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
+        }
+    } else {
+        throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
+    }
+
+    const caso = await casosRepository.findById(id);
+    if (!caso) {
+        throw new AppError(404, 'Nenhum caso encontrado para o id especificado');
+    }
+
+    const updatedCaso = await casosRepository.update(id, req.body);
+    res.status(200).json(updatedCaso);
+}
+
+async function updatePartialCaso(req, res) {
+    const id = req.params.id;
+
+    if (req.body.id) {
+        throw new AppError(400, 'Parâmetros inválidos', ['O id não pode ser atualizado']);
+    }
+
+    const agenteId = req.body.agente_id;
+    if (agenteId) {
+        const agente = await agentesRepository.findById(agenteId);
+        if (!agente) {
+            throw new AppError(404, 'Nenhum agente encontrado para o id especificado');
+        }
+    }
+
+    const caso = await casosRepository.findById(id);
+    if (!caso) {
+        throw new AppError(404, 'Nenhum caso encontrado para o id especificado');
+    }
+
+    const updatedCaso = await casosRepository.updatePartial(id, req.body);
+    res.status(200).json(updatedCaso);
+}
+
+async function deleteCaso(req, res) {
+    const id = req.params.id;
+
+    const caso = await casosRepository.findById(id);
+    if (!caso) {
+        throw new AppError(404, 'Nenhum caso encontrado para o id especificado');
+    }
+
+    const result = await casosRepository.remove(id);
+    if (!result) {
+        throw new AppError(500, 'Erro ao remover o agente');
+    }
+
+    res.status(204).send();
+}
+
+async function getAgenteByCasoId(req, res) {
+    const casoId = req.params.caso_id;
+    const caso = await casosRepository.findById(casoId);
+    if (!caso) {
+        throw new AppError(404, 'Nenhum caso encontrado para o id especificado');
+    }
+    const agenteId = caso.agente_id;
+    const agente = await agentesRepository.findById(agenteId);
+    if (!agente) {
+        throw new AppError(404, 'Nenhum agente encontrado para o agente_id especificado');
+    }
+    res.status(200).json(agente);
+}
+
+async function filter(req, res) {
+    const term = req.query.q;
+
+    const casos = await casosRepository.filter(term);
+    if (casos.length === 0) {
+        throw new AppError(404, 'Nenhum caso encontrado para a busca especificada');
+    }
+    res.json(casos);
 }
 
 module.exports = {
     getAllCasos,
-    getCasoById,
+    getCasosById,
     createCaso,
     updateCaso,
-    patchCaso,
+    updatePartialCaso,
     deleteCaso,
     getAgenteByCasoId,
+    filter,
 };

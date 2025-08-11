@@ -1,42 +1,80 @@
-const db = require("../db/db");
+const db = require('../db/db');
+const { AppError } = require('../utils/errorHandler');
 
-function findAll() {
-    return db("casos");
+async function findAll(filter = {}) {
+    try {
+        const result = await db('casos').select('*').where(filter);
+        return result;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao buscar casos', [error.message]);
+    }
 }
 
-function findById(id) {
-    return db("casos").where({ id }).first();
+async function findById(id) {
+    try {
+        const result = await db('casos').select('*').where({ id }).first();
+        return result;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao buscar caso', [error.message]);
+    }
 }
 
-// Funções para os filtros bônus
-function findBy(filter) {
-    return db("casos").where(filter);
+async function create(caso) {
+    try {
+        const [newCaso] = await db('casos').insert(caso).returning('*');
+        return newCaso;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao criar caso', [error.message]);
+    }
 }
 
-function search(query) {
-    return db("casos")
-        .where("titulo", "ilike", `%${query}%`) // ilike é case-insensitive (específico do Postgres)
-        .orWhere("descricao", "ilike", `%${query}%`);
+async function update(id, updatedCaso) {
+    try {
+        const [caso] = await db('casos').update(updatedCaso).where({ id }).returning('*');
+        return caso;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao atualizar caso', [error.message]);
+    }
 }
 
-function create(caso) {
-    return db("casos").insert(caso).returning("*");
+async function updatePartial(id, partialCaso) {
+    try {
+        const [caso] = await db('casos').update(partialCaso).where({ id }).returning('*');
+        return caso;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao atualizar caso', [error.message]);
+    }
 }
 
-function update(id, data) {
-    return db("casos").where({ id }).update(data).returning("*");
+async function remove(id) {
+    try {
+        const rows = await db('casos').del().where({ id });
+        return !!rows;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao excluir caso', [error.message]);
+    }
 }
 
-function remove(id) {
-    return db("casos").where({ id }).del();
+async function filter(term) {
+    try {
+        const result = await db('casos')
+            .select('*')
+            .where('titulo', 'ilike', `%${term}%`)
+            .orWhere('descricao', 'ilike', `%${term}%`);
+
+        console.log(result);
+        return result;
+    } catch (error) {
+        throw new AppError(500, 'Erro ao buscar casos', [error.message]);
+    }
 }
 
 module.exports = {
     findAll,
     findById,
-    findBy,
-    search,
     create,
     update,
+    updatePartial,
     remove,
+    filter,
 };
