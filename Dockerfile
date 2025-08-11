@@ -16,6 +16,7 @@ RUN npm install -g knex
 # Copia o resto dos arquivos do projeto para o diretório de trabalho
 COPY . .
 
+
 # Expõe a porta que a aplicação vai rodar
 EXPOSE 3000
 
