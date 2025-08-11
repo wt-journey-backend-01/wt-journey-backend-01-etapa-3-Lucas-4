@@ -1,33 +1,16 @@
 const casosRepository = require("../repositories/casosRepository");
 const agentesRepository = require("../repositories/agentesRepository");
 
-async function getAllCasos(req, res) {
+async function getAllCasos(req, res, next) {
     try {
-        // Bônus: busca por termo
-        if (req.query.q) {
-            const casos = await casosRepository.search(req.query.q);
-            return res.json(casos);
-        }
-
-        // Bônus: filtros
-        const filter = {};
-        if (req.query.agente_id) filter.agente_id = req.query.agente_id;
-        if (req.query.status) filter.status = req.query.status;
-
-        let casos;
-        if (Object.keys(filter).length > 0) {
-            casos = await casosRepository.findBy(filter);
-        } else {
-            casos = await casosRepository.findAll();
-        }
-
+        const casos = await casosRepository.findAll(req.query);
         res.json(casos);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar casos" });
+        next(error);
     }
 }
 
-async function getCasoById(req, res) {
+async function getCasoById(req, res, next) {
     try {
         const caso = await casosRepository.findById(req.params.id);
         if (!caso) {
@@ -35,32 +18,29 @@ async function getCasoById(req, res) {
         }
         res.json(caso);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar caso" });
+        next(error);
     }
 }
 
-async function createCaso(req, res) {
+async function createCaso(req, res, next) {
     try {
         const { agente_id } = req.body;
-        // Valida se o agente existe antes de criar o caso
-        const agente = await agentesRepository.findById(agente_id);
-        if (!agente) {
-            return res.status(400).json({
-                message:
-                    "O 'agente_id' fornecido não corresponde a um agente existente.",
-            });
+        if (agente_id) {
+            const agente = await agentesRepository.findById(agente_id);
+            if (!agente) {
+                return res
+                    .status(400)
+                    .json({ message: "O 'agente_id' fornecido não existe." });
+            }
         }
-
         const [newCaso] = await casosRepository.create(req.body);
         res.status(201).json(newCaso);
     } catch (error) {
-        res.status(400).json({
-            message: "Dados inválidos para criação do caso",
-        });
+        next(error);
     }
 }
 
-async function updateCaso(req, res) {
+async function updateCaso(req, res, next) {
     try {
         const [updatedCaso] = await casosRepository.update(
             req.params.id,
@@ -71,11 +51,11 @@ async function updateCaso(req, res) {
         }
         res.json(updatedCaso);
     } catch (error) {
-        res.status(400).json({ message: "Dados inválidos para atualização" });
+        next(error);
     }
 }
 
-async function deleteCaso(req, res) {
+async function deleteCaso(req, res, next) {
     try {
         const rowsDeleted = await casosRepository.remove(req.params.id);
         if (rowsDeleted === 0) {
@@ -83,28 +63,30 @@ async function deleteCaso(req, res) {
         }
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ message: "Erro ao deletar caso" });
+        next(error);
     }
 }
 
-// Bônus: GET /casos/:caso_id/agente
-async function getAgenteByCasoId(req, res) {
+async function getAgenteByCasoId(req, res, next) {
     try {
         const caso = await casosRepository.findById(req.params.caso_id);
         if (!caso) {
             return res.status(404).json({ message: "Caso não encontrado" });
         }
-
+        if (!caso.agente_id) {
+            return res
+                .status(404)
+                .json({ message: "Caso não possui agente responsável" });
+        }
         const agente = await agentesRepository.findById(caso.agente_id);
         if (!agente) {
             return res
                 .status(404)
                 .json({ message: "Agente responsável não encontrado" });
         }
-
         res.json(agente);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar agente do caso" });
+        next(error);
     }
 }
 

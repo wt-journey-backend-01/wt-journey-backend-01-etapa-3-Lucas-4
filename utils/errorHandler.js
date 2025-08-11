@@ -1,14 +1,19 @@
-// Middleware de tratamento de erros
 function errorHandler(err, req, res, next) {
     console.error(err.stack);
 
-    // Erros conhecidos (ex: validação) podem ter um status code específico
     if (err.statusCode) {
         return res.status(err.statusCode).json({ message: err.message });
     }
 
-    // Erros inesperados
-    res.status(500).json({ message: "Algo deu errado no servidor!" });
+    // Erros de violação de constraint do banco
+    if (err.code === "23502" || err.code === "22P02") {
+        // not_null_violation ou invalid_text_representation
+        return res.status(400).json({
+            message: "Payload inválido ou campos obrigatórios ausentes.",
+        });
+    }
+
+    res.status(500).json({ message: "Ocorreu um erro interno no servidor." });
 }
 
 module.exports = errorHandler;

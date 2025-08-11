@@ -1,25 +1,33 @@
-const db = require("../db/db");
+const db = require("../db/db.js");
 const { v4: uuidv4 } = require("uuid");
 
-function findAll() {
-    return db("casos");
+function findAll(filter = {}) {
+    const query = db("casos");
+
+    if (filter.status) {
+        query.where({ status: filter.status });
+    }
+
+    if (filter.agente_id) {
+        query.where({ agente_id: filter.agente_id });
+    }
+
+    if (filter.q) {
+        const searchTerm = `%${filter.q}%`;
+        query.where(function () {
+            this.where("titulo", "ilike", searchTerm).orWhere(
+                "descricao",
+                "ilike",
+                searchTerm
+            );
+        });
+    }
+
+    return query;
 }
 
 function findById(id) {
     return db("casos").where({ id }).first();
-}
-
-// Bônus: Para filtros como /casos?status=aberto
-function findBy(filter) {
-    return db("casos").where(filter);
-}
-
-// Bônus: Para busca full-text
-function search(query) {
-    const searchTerm = `%${query}%`;
-    return db("casos")
-        .where("titulo", "ilike", searchTerm)
-        .orWhere("descricao", "ilike", searchTerm);
 }
 
 function create(caso) {
@@ -35,4 +43,4 @@ function remove(id) {
     return db("casos").where({ id }).del();
 }
 
-module.exports = { findAll, findById, findBy, search, create, update, remove };
+module.exports = { findAll, findById, create, update, remove };

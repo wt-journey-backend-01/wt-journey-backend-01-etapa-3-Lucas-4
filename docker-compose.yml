@@ -1,35 +1,28 @@
 version: '3.8'
 
 services:
-  # Serviço da nossa API Node.js
   api:
-    build: . # Constrói a imagem a partir do Dockerfile na pasta atual
+    build: .
     container_name: policia_api_app
     ports:
-      - "3000:3000" # Mapeia a porta 3000 do container para a 3000 da sua máquina
+      - "3000:3000"
     volumes:
-      - .:/app # Espelha o código local para dentro do container (facilita o desenvolvimento)
-      - /app/node_modules # Evita que a pasta node_modules local sobrescreva a do container
+      - .:/app
+      - /app/node_modules
     depends_on:
-      - postgres-db # Garante que o banco de dados inicie antes da API
+      - postgres-db
     environment:
-      # Passa as variáveis de ambiente para a nossa aplicação
-      DB_HOST: postgres-db
-      DB_USER: postgres
-      DB_PASSWORD: 83782813 # Senha forte e clara
-      DB_NAME: policia_api
+      NODE_ENV: development
 
-  # Serviço do banco de dados PostgreSQL
   postgres-db:
     image: postgres:13
     container_name: policia_api_db
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 83782813 # A MESMA senha
+      POSTGRES_PASSWORD: 83782813
       POSTGRES_DB: policia_api
     ports:
-      # Expõe a porta do banco para podermos acessá-lo com o DBeaver
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data

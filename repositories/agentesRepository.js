@@ -3,13 +3,22 @@ const { v4: uuidv4 } = require("uuid");
 
 function findAll(filter = {}) {
     const query = db("agentes");
+
     if (filter.cargo) {
-        query.where("cargo", "ilike", filter.cargo);
+        query.where("cargo", "ilike", `%${filter.cargo}%`);
     }
+
+    if (filter.sort) {
+        const direction = filter.sort.startsWith("-") ? "desc" : "asc";
+        const column = filter.sort.replace("-", "");
+        if (["nome", "dataDeIncorporacao", "cargo"].includes(column)) {
+            query.orderBy(column, direction);
+        }
+    }
+
     return query;
 }
 
-// ... findById, create, update, remove (permanecem como antes)
 function findById(id) {
     return db("agentes").where({ id }).first();
 }

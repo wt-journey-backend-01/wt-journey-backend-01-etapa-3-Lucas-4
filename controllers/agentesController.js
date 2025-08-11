@@ -1,33 +1,15 @@
 const agentesRepository = require("../repositories/agentesRepository");
 
-// ...
-async function getAllAgentes(req, res) {
+async function getAllAgentes(req, res, next) {
     try {
-        const agentes = await agentesRepository.findAll(req.query); // Passa a query string direto
-
-        // Ordenação pode continuar aqui se for complexa, ou ser movida para o repo
-        if (req.query.sort === "dataDeIncorporacao") {
-            agentes.sort(
-                (a, b) =>
-                    new Date(a.dataDeIncorporacao) -
-                    new Date(b.dataDeIncorporacao)
-            );
-        } else if (req.query.sort === "-dataDeIncorporacao") {
-            agentes.sort(
-                (a, b) =>
-                    new Date(b.dataDeIncorporacao) -
-                    new Date(a.dataDeIncorporacao)
-            );
-        }
-
+        const agentes = await agentesRepository.findAll(req.query);
         res.json(agentes);
     } catch (error) {
-        res.status(500).json({ message: "Erro interno do servidor" }); // Erro 500 para falhas de banco
+        next(error);
     }
 }
-// ...
 
-async function getAgenteById(req, res) {
+async function getAgenteById(req, res, next) {
     try {
         const agente = await agentesRepository.findById(req.params.id);
         if (!agente) {
@@ -35,22 +17,20 @@ async function getAgenteById(req, res) {
         }
         res.json(agente);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar agente" });
+        next(error);
     }
 }
 
-async function createAgente(req, res) {
+async function createAgente(req, res, next) {
     try {
         const [newAgente] = await agentesRepository.create(req.body);
         res.status(201).json(newAgente);
     } catch (error) {
-        res.status(400).json({
-            message: "Dados inválidos para criação do agente",
-        });
+        next(error);
     }
 }
 
-async function updateAgente(req, res) {
+async function updateAgente(req, res, next) {
     try {
         const [updatedAgente] = await agentesRepository.update(
             req.params.id,
@@ -61,11 +41,11 @@ async function updateAgente(req, res) {
         }
         res.json(updatedAgente);
     } catch (error) {
-        res.status(400).json({ message: "Dados inválidos para atualização" });
+        next(error);
     }
 }
 
-async function deleteAgente(req, res) {
+async function deleteAgente(req, res, next) {
     try {
         const rowsDeleted = await agentesRepository.remove(req.params.id);
         if (rowsDeleted === 0) {
@@ -73,7 +53,7 @@ async function deleteAgente(req, res) {
         }
         res.status(204).send();
     } catch (error) {
-        res.status(500).json({ message: "Erro ao deletar agente" });
+        next(error);
     }
 }
 

@@ -33,7 +33,11 @@ app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 // Rotas da aplicação
 app.use(agentesRouter);
 app.use(casosRouter);
+app.use(errorHandler);
 
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+});
 // Rota raiz simples
 app.get("/", (req, res) => {
     res.send(
