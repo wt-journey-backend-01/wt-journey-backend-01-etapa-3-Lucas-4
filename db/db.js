@@ -1,6 +1,5 @@
-// O feedback sugere usar process.env, o que é uma ótima prática
-const environment = process.env.NODE_ENV || "development";
-const config = require("../knexfile")[environment];
+// Agora, apenas importamos a configuração, sem precisar especificar o ambiente.
+const config = require("../knexfile.js");
 const knex = require("knex")(config);
 
 module.exports = knex;
