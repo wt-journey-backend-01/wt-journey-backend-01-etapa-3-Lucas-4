@@ -1,10 +1,15 @@
-const db = require("../db/db");
+const db = require("../db/db.js");
 const { v4: uuidv4 } = require("uuid");
 
-function findAll() {
-    return db("agentes");
+function findAll(filter = {}) {
+    const query = db("agentes");
+    if (filter.cargo) {
+        query.where("cargo", "ilike", filter.cargo);
+    }
+    return query;
 }
 
+// ... findById, create, update, remove (permanecem como antes)
 function findById(id) {
     return db("agentes").where({ id }).first();
 }

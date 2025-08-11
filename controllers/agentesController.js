@@ -1,18 +1,11 @@
 const agentesRepository = require("../repositories/agentesRepository");
 
+// ...
 async function getAllAgentes(req, res) {
     try {
-        let agentes = await agentesRepository.findAll();
+        const agentes = await agentesRepository.findAll(req.query); // Passa a query string direto
 
-        // Bônus: Filtrar por cargo
-        if (req.query.cargo) {
-            agentes = agentes.filter(
-                (agente) =>
-                    agente.cargo.toLowerCase() === req.query.cargo.toLowerCase()
-            );
-        }
-
-        // Bônus: Ordenar por data de incorporação
+        // Ordenação pode continuar aqui se for complexa, ou ser movida para o repo
         if (req.query.sort === "dataDeIncorporacao") {
             agentes.sort(
                 (a, b) =>
@@ -29,9 +22,10 @@ async function getAllAgentes(req, res) {
 
         res.json(agentes);
     } catch (error) {
-        res.status(500).json({ message: "Erro ao buscar agentes" });
+        res.status(500).json({ message: "Erro interno do servidor" }); // Erro 500 para falhas de banco
     }
 }
+// ...
 
 async function getAgenteById(req, res) {
     try {

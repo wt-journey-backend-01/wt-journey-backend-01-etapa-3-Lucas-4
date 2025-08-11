@@ -12,7 +12,7 @@
 		"type": "git",
 		"url": "git+https://github.com/wt-journey-backend-01/wt-journey-backend-01-etapa-2-Lucas-4.git"
 	},
-	"keywords": [ ],
+	"keywords": [],
 	"author": "",
 	"license": "ISC",
 	"bugs": {
@@ -20,6 +20,7 @@
 	},
 	"homepage": "https://github.com/wt-journey-backend-01/wt-journey-backend-01-etapa-2-Lucas-4#readme",
 	"dependencies": {
+		"dotenv": "^17.2.1",
 		"express": "^5.1.0",
 		"knex": "^3.1.0",
 		"pg": "^8.16.3",

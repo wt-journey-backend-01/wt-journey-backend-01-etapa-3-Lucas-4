@@ -1,22 +1,37 @@
 version: '3.8'
 
 services:
-  # Nome do serviço do banco de dados
+  # Serviço da nossa API Node.js
+  api:
+    build: . # Constrói a imagem a partir do Dockerfile na pasta atual
+    container_name: policia_api_app
+    ports:
+      - "3000:3000" # Mapeia a porta 3000 do container para a 3000 da sua máquina
+    volumes:
+      - .:/app # Espelha o código local para dentro do container (facilita o desenvolvimento)
+      - /app/node_modules # Evita que a pasta node_modules local sobrescreva a do container
+    depends_on:
+      - postgres-db # Garante que o banco de dados inicie antes da API
+    environment:
+      # Passa as variáveis de ambiente para a nossa aplicação
+      DB_HOST: postgres-db
+      DB_USER: postgres
+      DB_PASSWORD: 83782813 # Senha forte e clara
+      DB_NAME: policia_api
+
+  # Serviço do banco de dados PostgreSQL
   postgres-db:
-    image: postgres:13 # Usamos uma imagem oficial do PostgreSQL
+    image: postgres:13
     container_name: policia_api_db
     restart: always
     environment:
-      # Define as variáveis de ambiente para o container do Postgres
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 83782813 # Pode ser uma senha simples para o ambiente de teste
+      POSTGRES_PASSWORD: 83782813 # A MESMA senha
       POSTGRES_DB: policia_api
     ports:
-      # Mapeia a porta do container (5432) para uma porta na sua máquina (5433)
-      # Usamos 5433 para não dar conflito com o Postgres que você já tem instalado
+      # Expõe a porta do banco para podermos acessá-lo com o DBeaver
       - "5433:5432"
     volumes:
-      # Garante que os dados do banco persistam mesmo se o container for reiniciado
       - pgdata:/var/lib/postgresql/data
 
 volumes:

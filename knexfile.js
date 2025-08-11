@@ -1,11 +1,13 @@
+require("dotenv").config();
+
 module.exports = {
     client: "pg",
     connection: {
-        host: "postgres-db", // <-- MUDANÇA CRÍTICA: Nome do serviço no docker-compose
-        port: 5432, // Dentro da rede Docker, a porta é a padrão 5432
-        user: "postgres",
-        password: "83782813", // A mesma senha definida no docker-compose
-        database: "policia_api",
+        host: process.env.DB_HOST || "localhost",
+        port: 5432,
+        user: process.env.DB_USER || "postgres",
+        password: process.env.DB_PASSWORD || "supersecretpassword",
+        database: process.env.DB_NAME || "policia_api",
     },
     migrations: {
         directory: "./db/migrations",
@@ -13,5 +15,4 @@ module.exports = {
     seeds: {
         directory: "./db/seeds",
     },
-    useNullAsDefault: true,
 };
